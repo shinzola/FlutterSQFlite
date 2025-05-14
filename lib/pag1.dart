@@ -1,4 +1,5 @@
 import 'package:dbestudante/estudante.dart';
+import 'package:dbestudante/estudante_dao.dart';
 import 'package:flutter/material.dart';
 
 class pag1 extends StatefulWidget {
@@ -9,6 +10,9 @@ class pag1 extends StatefulWidget {
 }
 
 class _pag1State extends State<pag1> {
+  final _estudanteDAO = EstudanteDao();
+  Estudante? _estudanteAtual;
+
   final _controllerNome = TextEditingController();
   final _controllerMatricula = TextEditingController();
   List<Estudante> _listaEstudantes = [
@@ -16,6 +20,49 @@ class _pag1State extends State<pag1> {
     Estudante(nome: "Ciclano", matricula: "789123"),
     Estudante(nome: "Jorge", matricula: "7654321")
   ];
+
+  @override
+  void initState() {
+    _loadEstudantes();
+    super.initState();
+  }
+
+  _loadEstudantes() async {
+    List<Estudante> temp = await _estudanteDAO.listarEstudantes();
+    setState(() {
+      _listaEstudantes = temp;
+    });
+  }
+
+  _salvarOUEditar() async {
+    if (_estudanteAtual == null) {
+      //novo estudante
+      await _estudanteDAO.incluirEstudante(Estudante(
+          nome: _controllerNome.text, matricula: _controllerMatricula.text));
+    } else {
+      //atualizar estudante
+      _estudanteAtual!.nome = _controllerNome.text;
+      _estudanteAtual!.matricula = _controllerMatricula.text;
+      await _estudanteDAO.editarEstudante(_estudanteAtual!);
+    }
+    _controllerNome.clear();
+    _controllerMatricula.clear();
+    setState(() {
+      _loadEstudantes();
+      _estudanteAtual = null;
+    });
+  }
+
+  _apagarEstudante(int index) async {
+    await _estudanteDAO.deleteEstudante(index);
+    _loadEstudantes();
+  }
+
+  _editarEstudante(Estudante e) async {
+    await _estudanteDAO.editarEstudante(e);
+    _loadEstudantes();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +98,13 @@ class _pag1State extends State<pag1> {
           ),
           SizedBox(
             width: MediaQuery.of(context).size.width,
-            child: ElevatedButton(onPressed: () {}, child: Text("Salvar")),
+            child: ElevatedButton(
+              onPressed: () {
+                _salvarOUEditar();
+              },
+              child:
+                  _estudanteAtual == null ? Text("Salvar") : Text("Atualizar"),
+            ),
           ),
           Expanded(
             child: ListView.builder(
@@ -61,8 +114,20 @@ class _pag1State extends State<pag1> {
                 return ListTile(
                   title: Text(_listaEstudantes[index].nome),
                   subtitle: Text(_listaEstudantes[index].matricula),
-                  trailing:
-                      IconButton(onPressed: () {}, icon: Icon(Icons.delete)),
+                  trailing: IconButton(
+                    onPressed: () {
+                      _apagarEstudante(_listaEstudantes[index].id!);
+                    },
+                    icon: Icon(Icons.delete),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _estudanteAtual = _listaEstudantes[index];
+                      _controllerNome.text = _estudanteAtual!.nome;
+                      _controllerMatricula.text = _estudanteAtual!.matricula;
+                      _editarEstudante(_estudanteAtual!);
+                    });
+                  },
                 );
               },
             ),
