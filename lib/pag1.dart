@@ -1,6 +1,8 @@
 import 'package:dbestudante/estudante.dart';
 import 'package:dbestudante/estudante_dao.dart';
+import 'package:dbestudante/vincularDisciplina.dart';
 import 'package:flutter/material.dart';
+import 'package:dbestudante/cad_disciplina.dart';
 
 class pag1 extends StatefulWidget {
   const pag1({super.key});
@@ -15,11 +17,7 @@ class _pag1State extends State<pag1> {
 
   final _controllerNome = TextEditingController();
   final _controllerMatricula = TextEditingController();
-  List<Estudante> _listaEstudantes = [
-    Estudante(nome: "Fulano", matricula: "123456"),
-    Estudante(nome: "Ciclano", matricula: "789123"),
-    Estudante(nome: "Jorge", matricula: "7654321")
-  ];
+  List<Estudante> _listaEstudantes = [];
 
   @override
   void initState() {
@@ -68,7 +66,8 @@ class _pag1State extends State<pag1> {
     return Scaffold(
       appBar: AppBar(
         title: Text("CRUD Estudante"),
-        backgroundColor: Colors.cyan,
+        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18.0),
+        backgroundColor: Colors.deepPurple,
       ),
       body: Column(
         children: [
@@ -110,28 +109,61 @@ class _pag1State extends State<pag1> {
             child: ListView.builder(
               itemCount: _listaEstudantes.length,
               itemBuilder: (context, index) {
-                //colocar a logica para criar cada item a partir da lista Estudantes
-                return ListTile(
-                  title: Text(_listaEstudantes[index].nome),
-                  subtitle: Text(_listaEstudantes[index].matricula),
-                  trailing: IconButton(
-                    onPressed: () {
-                      _apagarEstudante(_listaEstudantes[index].id!);
+                return Card(
+                  child: ListTile(
+                    title:
+                        Text("Aluno: ${_listaEstudantes[index].nome ?? 'N/A'}"),
+                    subtitle: Text(
+                        "Matricula: ${_listaEstudantes[index].matricula ?? 'N/A'}"),
+                    // Adicionar mais detalhes ou botões de ação se necessário
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      color: Colors.red,
+                      onPressed: () {
+                        if (_listaEstudantes[index].id != null) {
+                          _apagarEstudante(_listaEstudantes[index].id!);
+                        }
+                      },
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _estudanteAtual = _listaEstudantes[index];
+                        _controllerNome.text = _estudanteAtual!.nome;
+                        _controllerMatricula.text = _estudanteAtual!.matricula;
+                        _editarEstudante(_estudanteAtual!);
+                      });
                     },
-                    icon: Icon(Icons.delete),
                   ),
-                  onTap: () {
-                    setState(() {
-                      _estudanteAtual = _listaEstudantes[index];
-                      _controllerNome.text = _estudanteAtual!.nome;
-                      _controllerMatricula.text = _estudanteAtual!.matricula;
-                      _editarEstudante(_estudanteAtual!);
-                    });
-                  },
                 );
               },
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 60), // empurra pra cima
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => cad_disciplina()));
+                  },
+                  child: Text("Cadastrar disciplina"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => vincularDisciplina()));
+                  },
+                  child: Text("Adicionar disciplina"),
+                ),
+              ],
+            ),
+          )
         ],
       ),
     );
